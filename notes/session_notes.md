@@ -21,5 +21,5 @@ Primarily the epsilon greedy decay with the final stable epsilon set too high.
 This forces the agent to perform random behavior even if it knows better.
 A sufficiently low final epsilon, or perhaps 0, is required for SARSA type algorithms if precise action is required.
 
-
-### ideas for future work
+The agent appears to learn the ideal behavior within the simple environment. 
+The next step will be to re-incorporate the heat loss and conservation of energy in the gym environment.
