@@ -6,16 +6,25 @@ import random
 from collections import namedtuple, deque
 from agents.PDQN_Model import Actor
 
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-LEARNING_RATE = 1e-4
-BUFFER_SIZE = int(1e2)
-BATCH_SIZE = 50
-UPDATE_EVERY = 4
-GAMMA = 0.99
-BETA = 0.0
-TAU = 1e-3
+# hyper parameters
+# --------------------------------------------------------------------------------------------- #
+LEARNING_RATE = 1e-4  # NN learning rate
+BUFFER_SIZE = int(1e2)  # replay buffer size, learning does not start until this is full
+BATCH_SIZE = 50  # memory batch size
+UPDATE_EVERY = 4  # update NN every n steps
+GAMMA = 0.99  # reward discounting factor
+BETA = 0.0  # prioritized experience replay
+TAU = 1e-3  # controls the soft update
+
+# epsilon greedy exploration vs exploitation parameters
+EPS_START = 1.0
+EPS_END = 0.01
+EPS_DECAY = 0.995
+
+
+# --------------------------------------------------------------------------------------------- #
 
 
 class Agent:
@@ -40,9 +49,9 @@ class Agent:
         self.t_step = 0
 
         # epsilon decay
-        self.eps = 1.0
-        self.eps_end = 0.1
-        self.eps_decay = 0.995
+        self.eps = EPS_START
+        self.eps_end = EPS_END
+        self.eps_decay = EPS_DECAY
 
     def step(self, state, action, reward, next_state, done):
         """
@@ -77,25 +86,20 @@ class Agent:
         """
 
         state = torch.Tensor(state).float().to(device)
-        # self.qnetwork_local.eval()
+        self.qnetwork_local.eval()
         with torch.no_grad():
             action_values = self.qnetwork_local(state)
-        # self.qnetwork_local.train()
+        self.qnetwork_local.train()
 
-        heating_values = action_values[0].cpu().data.numpy()
-        cooling_values = action_values[1].cpu().data.numpy()
-
-        heating_action = np.argmax(heating_values)
-        cooling_action = np.argmax(cooling_values)
+        action = np.argmax(action_values)
 
         self.eps = max(self.eps_end, self.eps * self.eps_decay)
 
         # Epsilon-greedy action selection
         if random.random() > self.eps:
-            return np.array((heating_action, cooling_action))
+            return int(action)
         else:
-            return np.random.randint(0, 5, 2)
-
+            return np.random.randint(0, 11)
 
     def learn(self, experiences, gamma):
         # type: (tuple, float) -> None
@@ -107,22 +111,21 @@ class Agent:
         """
         states, actions, rewards, next_states, dones, probabilities = experiences
 
-        # only for double DQN
-        # self.beta = min(1, self.beta + 1e-5)
-
-        sampling_weight = (1/BUFFER_SIZE * 1/probabilities) ** BETA / probabilities.squeeze().max(0)[0]
+        sampling_weight = (1 / BUFFER_SIZE * 1 / probabilities) ** BETA / probabilities.squeeze().max(0)[0]
 
         # get action value for the chosen action
-        Q_target_undiscounted = self.qnetwork_target(next_states).detach().max(2)[0].unsqueeze(2)
+        Q_target_undiscounted = self.qnetwork_target(next_states).detach()
 
-        # then sum the value of the water and land heads
-        Q_target_undiscounted = torch.sum(Q_target_undiscounted, dim=0)
+        # choose the best action and shape correctly
+        Q_target_undiscounted = Q_target_undiscounted.max(1)[0].unsqueeze(1)
 
+        # discount the target
         Q_target = rewards + (gamma * Q_target_undiscounted * (1 - dones))
 
-        Q_estimate = self.qnetwork_local(states).max(2)[0].unsqueeze(2)
-        Q_estimate = torch.sum(Q_estimate, dim=0)
+        # get q estimate and shape correctly
+        Q_estimate = self.qnetwork_local(states).max(1)[0].unsqueeze(1)
 
+        # calculate loss
         loss = F.mse_loss(sampling_weight * Q_estimate, sampling_weight * Q_target)
         self.optimizer.zero_grad()
         loss.backward()
@@ -147,7 +150,6 @@ class Agent:
         """
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
             target_param.data.copy_(tau * local_param.data + (1.0 - tau) * target_param.data)
-
 
 
 class ReplayBuffer:
@@ -210,7 +212,8 @@ class ReplayBuffer:
         priority_array = np.array(self.priority_memory)
 
         priority_probability = (priority_array ** self.prob_temp) / np.sum(priority_array ** self.prob_temp)
-        self.indexes = np.random.choice(np.arange(0, len(self.memory)), size=self.batch_size, replace=False, p=priority_probability)
+        self.indexes = np.random.choice(np.arange(0, len(self.memory)), size=self.batch_size, replace=False,
+                                        p=priority_probability)
 
         experiences = [self.memory[i] for i in self.indexes]
         filtered_probabilities = priority_probability[self.indexes]
@@ -218,9 +221,12 @@ class ReplayBuffer:
         states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().to(device)
         actions = torch.from_numpy(np.vstack([e.action for e in experiences if e is not None])).long().to(device)
         rewards = torch.from_numpy(np.vstack([e.reward for e in experiences if e is not None])).float().to(device)
-        next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().to(device)
-        dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(device)
-        priority_prob = torch.from_numpy(np.vstack([p for p in filtered_probabilities if p is not None])).float().to(device)
+        next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().to(
+            device)
+        dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(
+            device)
+        priority_prob = torch.from_numpy(np.vstack([p for p in filtered_probabilities if p is not None])).float().to(
+            device)
 
         return states, actions, rewards, next_states, dones, priority_prob
 

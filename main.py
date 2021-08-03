@@ -9,13 +9,13 @@ if __name__ == '__main__':
     env = gym.make("gym_greenhouse:greenhouse-v0")
     print(f"Action Space: {env.action_space}")
     print(f"Observation Space: {env.observation_space}")
-    action_size = env.action_space.nvec[0]
+    action_size = env.action_space.n
     observation_size = env.observation_space.n
     agent = Agent(action_size=action_size, observation_size=observation_size, seed=0)
     rewards_history = []
-    num_episodes = 1000
+    num_episodes = int(1e3)
 
-    for i_episode in range(num_episodes):
+    for i_episode in range(1, num_episodes):
         observation = env.reset()
         done = False
         while not done:
@@ -25,15 +25,15 @@ if __name__ == '__main__':
             agent.step(observation, action, reward, next_observation, done)
             observation = next_observation
 
+        if i_episode % 100 == 0:
+            print(f"Episode: {i_episode}, Average Reward: {np.mean(rewards_history[-100:])}")
+
         rewards_history.append(np.sum(env.reward_history))
 
     print("Training Complete")
-    print("Final Episode:")
-
     env.render()
-
-    x = np.arange(num_episodes)
-    y = rewards_history
+    y = np.convolve(rewards_history, np.ones(10), 'valid') / 10
+    x = np.arange(len(y))
     plt.plot(x, y)
     plt.xlabel("episode")
     plt.ylabel("reward")
