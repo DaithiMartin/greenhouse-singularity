@@ -21,7 +21,7 @@ TAU = 1e-3  # controls the soft update
 # epsilon greedy exploration vs exploitation parameters
 EPS_START = 1.0
 EPS_END = 0.01
-EPS_DECAY = 0.995
+EPS_DECAY = 0.9995
 
 
 # --------------------------------------------------------------------------------------------- #

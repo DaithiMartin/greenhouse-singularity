@@ -23,3 +23,17 @@ A sufficiently low final epsilon, or perhaps 0, is required for SARSA type algor
 
 The agent appears to learn the ideal behavior within the simple environment. 
 The next step will be to re-incorporate the heat loss and conservation of energy in the gym environment.
+
+Incorporated heat loss and but found more bugs and fixed and number of issues. 
+
+- fixed state update ordering in environment
+  - this was causing major learning issues
+- fixed history recording for temp, reward and actions
+- changed reward function to incorporate tolerance 
+- updated env.render() to with tolerances
+- fixed U value in temperature update
+- tweaked model and agent hyper parameters
+
+Under the basic scenario of constant outside time and conductive heat exchange, the agent finds the ideal policy.
+
+The next step is to incorporate diurnal temp swings.

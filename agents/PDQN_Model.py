@@ -14,8 +14,8 @@ class Actor(nn.Module):
         self.fc2 = nn.Linear(fc_units, fc_units)
         self.fc3 = nn.Linear(fc_units, action_space)
 
-        self.dropout_1 = nn.Dropout(p=0)
-        self.dropout_2 = nn.Dropout(p=0)
+        self.dropout_1 = nn.Dropout(p=0.1)
+        self.dropout_2 = nn.Dropout(p=0.1)
 
         self.reset_parameters()
 
