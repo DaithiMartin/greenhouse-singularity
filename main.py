@@ -11,7 +11,8 @@ if __name__ == '__main__':
     print(f"Observation Space: {env.observation_space}")
     action_size = env.action_space.n
     observation_size = env.observation_space.n
-    agent = Agent(action_size=action_size, observation_size=observation_size, seed=0)
+    agent = Agent(action_size, observation_size, seed=0)
+    # agent = Agent(action_size=action_size, observation_size=observation_size, seed=0)
     rewards_history = []
     num_episodes = int(1e3)
 
@@ -24,6 +25,9 @@ if __name__ == '__main__':
             next_observation, reward, done, info = env.step(action)
             agent.step(observation, action, reward, next_observation, done)
             observation = next_observation
+
+        if i_episode == 1:
+            env.render()
 
         if i_episode % 100 == 0:
             print(f"Episode: {i_episode}, Average Reward: {np.mean(rewards_history[-100:])}")

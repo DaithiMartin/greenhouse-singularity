@@ -28,12 +28,42 @@ Incorporated heat loss and but found more bugs and fixed and number of issues.
 
 - fixed state update ordering in environment
   - this was causing major learning issues
+  
+---
+## 2021.8.04
 - fixed history recording for temp, reward and actions
 - changed reward function to incorporate tolerance 
+
+---
+## 2021.8.05
 - updated env.render() to with tolerances
 - fixed U value in temperature update
+
+---
+## 2021.8.07
 - tweaked model and agent hyper parameters
 
 Under the basic scenario of constant outside time and conductive heat exchange, the agent finds the ideal policy.
 
 The next step is to incorporate diurnal temp swings.
+
+---
+## 2021.08.11
+
+Re-incorporating the diurnal temperature swings is proving challenging.
+
+This initially appears to be due to improper representation of state in the observation. 
+The observation does not contain enough information or perhaps the wrong information.
+
+old observation: [time, outside_temp, inside_temp, ideal_temp]
+
+For example removing time component from the observation, the model increases' performance.
+
+While state/observation may still be an issue, some other bullshit is going on.
+
+After much investigation, the agent appears to form equilibrium with the environment action.
+It does not however push the temp to the ideal range....
+
+It also appears that my coding of the agent is not the issue. I plugged in a reference DQN, and it performed similarly. 
+I am done for the day.
+

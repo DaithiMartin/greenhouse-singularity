@@ -4,7 +4,7 @@ import torch.optim as optim
 import numpy as np
 import random
 from collections import namedtuple, deque
-from agents.PDQN_Model import Actor
+from agents.PDQN_Model import QNetwork
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -30,7 +30,7 @@ EPS_DECAY = 0.9995
 class Agent:
     """Q Network agent with prioritized replay buffer"""
 
-    def __init__(self, action_size, observation_size, seed):
+    def __init__(self, action_size, observation_size, seed, new_model=False):
 
         """
         Initializes Agent Object
@@ -38,8 +38,8 @@ class Agent:
         self.action_size = action_size
 
         # Q-Network
-        self.qnetwork_local = Actor(action_size, observation_size, seed).to(device)
-        self.qnetwork_target = Actor(action_size, observation_size, seed).to(device)
+        self.qnetwork_local = QNetwork(action_size, observation_size, seed).to(device)
+        self.qnetwork_target = QNetwork(action_size, observation_size, seed).to(device)
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LEARNING_RATE)
 
         # Replay memory

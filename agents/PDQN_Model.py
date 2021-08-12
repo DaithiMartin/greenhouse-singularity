@@ -3,11 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class Actor(nn.Module):
+class QNetwork(nn.Module):
     """Actor (Deterministic Policy!) Model."""
 
     def __init__(self, action_space, observation_space, seed, fc_units=256):
-        super(Actor, self).__init__()
+        super(QNetwork, self).__init__()
         self.seed = torch.manual_seed(seed) if seed is not None else None
 
         self.fc1 = nn.Linear(observation_space, fc_units)
