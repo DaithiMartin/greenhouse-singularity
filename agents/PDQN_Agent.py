@@ -4,7 +4,7 @@ import torch.optim as optim
 import numpy as np
 import random
 from collections import namedtuple, deque
-from agents.PDQN_Model import QNetwork
+from agents.PDQN_Model import PDQNetwork
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -20,17 +20,22 @@ TAU = 1e-3  # controls the soft update
 
 # epsilon greedy exploration vs exploitation parameters
 EPS_START = 1.0
-EPS_END = 0.01
-EPS_DECAY = 0.9995
+EPS_END = 0.001
+EPS_DECAY = 0.995
 
 
 # --------------------------------------------------------------------------------------------- #
 
 
-class Agent:
-    """Q Network agent with prioritized replay buffer"""
+class PDQNAgent:
+    """
+    SARSA_max (DeepQ) agent with prioritized replay buffer.
 
-    def __init__(self, action_size, observation_size, seed, new_model=False):
+    Deep Q: https://arxiv.org/abs/1312.5602, https://www.nature.com/articles/nature14236
+    Prioritized Experience Replay: https://arxiv.org/abs/1511.05952
+    """
+
+    def __init__(self, observation_size, action_size, seed, new_model=False):
 
         """
         Initializes Agent Object
@@ -38,8 +43,8 @@ class Agent:
         self.action_size = action_size
 
         # Q-Network
-        self.qnetwork_local = QNetwork(action_size, observation_size, seed).to(device)
-        self.qnetwork_target = QNetwork(action_size, observation_size, seed).to(device)
+        self.qnetwork_local = PDQNetwork(observation_size, action_size, seed).to(device)
+        self.qnetwork_target = PDQNetwork(observation_size, action_size, seed).to(device)
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LEARNING_RATE)
 
         # Replay memory
@@ -74,13 +79,12 @@ class Agent:
                 experiences = self.memory.sample()
                 self.learn(experiences, GAMMA)
 
-    def act(self, state, eps=0.1):
-
+    def act(self, state):
+        # TODO: ADD ON AND OFF SWITCH FOR EPSILON GREEDY POLICY
         """
         Chooses an action with epsilon greedy policy.
         Args:
             state: (tuple) state vector
-            eps: (float) epsilon value
         Returns:
             int: action index
         """
@@ -113,17 +117,11 @@ class Agent:
 
         sampling_weight = (1 / BUFFER_SIZE * 1 / probabilities) ** BETA / probabilities.squeeze().max(0)[0]
 
-        # get action value for the chosen action
-        Q_target_undiscounted = self.qnetwork_target(next_states).detach()
+        Q_values_next = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
 
-        # choose the best action and shape correctly
-        Q_target_undiscounted = Q_target_undiscounted.max(1)[0].unsqueeze(1)
+        Q_target = rewards + (gamma * Q_values_next * (1 - dones))
 
-        # discount the target
-        Q_target = rewards + (gamma * Q_target_undiscounted * (1 - dones))
-
-        # get q estimate and shape correctly
-        Q_estimate = self.qnetwork_local(states).max(1)[0].unsqueeze(1)
+        Q_estimate = self.qnetwork_local(states).gather(1, actions)
 
         # calculate loss
         loss = F.mse_loss(sampling_weight * Q_estimate, sampling_weight * Q_target)

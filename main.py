@@ -1,6 +1,7 @@
 import numpy as np
 
-from agents.PDQN_Agent import Agent
+from agents.PDQN_Agent import PDQNAgent
+from agents.DQ_Agent import DQAgent
 import gym
 import matplotlib.pyplot as plt
 
@@ -11,10 +12,10 @@ if __name__ == '__main__':
     print(f"Observation Space: {env.observation_space}")
     action_size = env.action_space.n
     observation_size = env.observation_space.n
-    agent = Agent(action_size, observation_size, seed=0)
-    # agent = Agent(action_size=action_size, observation_size=observation_size, seed=0)
+    # agent = DQAgent(observation_size, action_size, seed=0)
+    agent = PDQNAgent(observation_size, action_size, seed=0)
     rewards_history = []
-    num_episodes = int(1e3)
+    num_episodes = int(5e3)
 
     for i_episode in range(1, num_episodes):
         observation = env.reset()

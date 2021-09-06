@@ -67,3 +67,32 @@ It does not however push the temp to the ideal range....
 It also appears that my coding of the agent is not the issue. I plugged in a reference DQN, and it performed similarly. 
 I am done for the day.
 
+
+---
+I am Odin, not Sisyphus.
+
+1. Bug in SARSA algorithm
+
+A major problem was the implementation of the PDQN_Agent. 
+The Q value estimates and Q value targets were being calculated incorrectly. 
+This fix remarkably improved performance and was likely a major contribution to all previous issues.
+
+2. Epsilon greedy policy slows convergence.
+
+Epsilon greedy policy appears to slow convergence.
+When comparing a vanilla DQ with no epsilon greedy policy to PDQ with epsilon greedy policy, the vanilla DQ performs best.
+Further, studies with both torch and numpy seeds will need to be done to confirm this.
+One idea is a jupiter notebook for side by side analysis. 
+TODOs were added to both PDQN_Agent and DQ_Agent for epsilon greedy features.
+
+3. Network size is crucial for optimal solution.
+
+Even with this relatively simple problem, network size is crucial for success.
+The DQ_Agent was not able to solve the environment with hidden_layer = 64, but was able to with hidden_layer = 256.
+Similar to the epsilon studies proposed above, width vs depth will need to be explored.
+
+4. Reference solutions are very, VERY helpful. 
+
+Lastly, I would not have found the SARSA bug if it were not for a reference implementation.
+When possible, check your implementation against a reference.
+
