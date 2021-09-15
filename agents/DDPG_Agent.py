@@ -22,7 +22,7 @@ WEIGHT_DECAY = 0  # L2 weight decay
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-class Agent:
+class DDPGAgent:
 
     def __init__(self, observation_size, action_size, random_seed):
         """
