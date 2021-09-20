@@ -8,6 +8,8 @@ from agents.PDQN_Model import PDQNetwork
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+# TODO: RANDOM SEED NOT FULLY IMPLEMENTED, GETTING STOCHASTIC BEHAVIOR
+
 # hyper parameters
 # --------------------------------------------------------------------------------------------- #
 LEARNING_RATE = 1e-4  # NN learning rate
