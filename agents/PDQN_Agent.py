@@ -50,6 +50,7 @@ class PDQNAgent:
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LEARNING_RATE)
 
         # Replay memory
+        self.seed = random.seed(seed)
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed)
 
         # Initialize time step (for updating every UPDATE_EVERY steps)
