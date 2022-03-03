@@ -13,11 +13,11 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # hyper parameters
 # --------------------------------------------------------------------------------------------- #
 LEARNING_RATE = 1e-4  # NN learning rate
-BUFFER_SIZE = int(1e2)  # replay buffer size, learning does not start until this is full
-BATCH_SIZE = 50  # memory batch size
+BUFFER_SIZE = int(1e5)  # replay buffer size, learning does not start until this is full
+BATCH_SIZE = 64  # memory batch size
 UPDATE_EVERY = 4  # update NN every n steps
 GAMMA = 0.99  # reward discounting factor
-BETA = 0.0  # prioritized experience replay
+BETA = 0.0  # prioritized experience replay TODO: NEEDS BETTER EXPLANATION
 TAU = 1e-3  # controls the soft update
 
 # epsilon greedy exploration vs exploitation parameters
@@ -111,7 +111,7 @@ class PDQNAgent:
     def learn(self, experiences, gamma):
         # type: (tuple, float) -> None
         """
-        Up date the model weights and the resulting priorities in the replay buffer.
+        Update the model weights and the resulting priorities in the replay buffer.
         Args:
             experiences: (tuple) tuple of np.vstacks, data for supervised learning
             gamma: (float) expected future reward discount factor
@@ -154,7 +154,9 @@ class PDQNAgent:
 
 
 class ReplayBuffer:
-    """Fixed-size prioritized buffer to store experience tuples."""
+    # TODO: THIS APPEAR TO BE IMPLEMENTED INCORRECTLY, ALPHA SHOULD BE CONSTANT AND BETA ANNEALS
+    """Fixed-size prioritized buffer to store experience tuples.
+    Uses "first variant" for sample probability from reference paper."""
 
     def __init__(self, action_size, buffer_size, batch_size, seed, eta=1e-5, prob_temp=0.5, temp_decay=1e-5):
         # type: (int, int, int, int, float, float, float) -> None
@@ -169,8 +171,8 @@ class ReplayBuffer:
         self.action_size = action_size
         self.batch_size = batch_size
         self.seed = np.random.seed(seed)
-        self.eta = eta
-        self.prob_temp = prob_temp
+        self.eta = eta      # small number for priority sampling to prevent not sampling a experience when td error is 0
+        self.prob_temp = prob_temp  # alpha exponent from reference paper
         self.temp_decay = temp_decay
         self.indexes = np.zeros(batch_size)
 
@@ -242,6 +244,7 @@ class ReplayBuffer:
             dones: (torch.tensor) indicates if state is terminal
             td_error: (float) used to update priority in buffer
         """
+
         priority = (torch.abs(reward + td_error) + self.eta)
 
         for i, index in enumerate(self.indexes):

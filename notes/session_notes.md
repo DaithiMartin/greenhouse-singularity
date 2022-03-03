@@ -95,4 +95,43 @@ Similar to the epsilon studies proposed above, width vs depth will need to be ex
 
 Lastly, I would not have found the SARSA bug if it were not for a reference implementation.
 When possible, check your implementation against a reference.
+---
 
+## 2022.02.22
+
+---
+Haven't been in a good habit of tracking progress in this file.
+This led to several long set backs and disorganized work.
+Significant effort needs to be applied to keep in a good habit for this.
+I will attempt to use OKRs for the purposes of tracking and achieving objectives.
+
+Initial problem was observed in no agent learning. First I checked the dimensional analysis of heat equations.
+These were not checked after switching units to Watts.  
+Initial inspection shows no issues with the units.
+Next I examined min and max of the action space. 
+This appeared to be the issue at least for DQ.
+
+### Next Session
+I need to examine why the PDQN is not learning as well as the DQ. 
+This may involve syncing their eps decays and hyper parameters. 
+---
+## 2022.03.01
+
+---
+I determined what was going wrong with the PDQ_Agent.py and inserted a todo in the replay buffer.
+The next task is to set OKR's for this week. 
+The main plan is to focus on increasing the complexity of the gym environment then to deal with the agents.
+The bulk of my thesis work is in the simulation of the greenhouse because I will not be developing new RL algorithms.
+Reference algorithms are available from udacity and from OpenAI Spinning Up. 
+The main goal is to get a fully functioning simulation and push the DQN to its limits. 
+
+**Objectives**
+1. get ready for meeting with Doug
+
+**Key Results**
+1. ~~Determine thesis structure based on other Tommy's~~
+   - Tommy's thesis appears to just be a long paper. My current POC paper structure is sufficient
+2. Incorporate humidity mass balance equation
+3. Fix code in PDQ replay buffer
+4. **Stretch** Find CO2 mass balance equation
+   - Might need to talk to Alex Bulmahn

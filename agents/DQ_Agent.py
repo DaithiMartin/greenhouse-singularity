@@ -10,16 +10,16 @@ import torch.optim as optim
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# TODO: RANDOM SEED NOT FULLY IMPLEMENTED, GETTING STOCHASTIC BEHAVIOR
-
 # hyper parameters
 # --------------------------------------------------------------------------------------------- #
+LEARNING_RATE = 5e-4  # learning rate
 BUFFER_SIZE = int(1e5)  # replay buffer size
-BATCH_SIZE = 64  # mini-batch size
+BATCH_SIZE = 64  # memory batch size
+UPDATE_EVERY = 4  # how often to update the network
 GAMMA = 0.99  # discount factor
 TAU = 1e-3  # for soft update of target parameters
-LR = 5e-4  # learning rate
-UPDATE_EVERY = 4  # how often to update the network
+
+# TODO: DEFINE EPS DECAY?
 # --------------------------------------------------------------------------------------------- #
 
 
@@ -48,7 +48,7 @@ class DQAgent:
         # Q-Network
         self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)
         self.qnetwork_target = QNetwork(state_size, action_size, seed).to(device)
-        self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
+        self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LEARNING_RATE)
 
         # Replay memory
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed)
@@ -67,7 +67,7 @@ class DQAgent:
                 experiences = self.memory.sample()
                 self.learn(experiences, GAMMA)
 
-    def act(self, state, eps=0.):
+    def act(self, state, eps=0.0):
         # TODO: CHANGE SO THAT EPS IS HANDLED WITHIN THIS FILE
 
         state = torch.from_numpy(state).float().unsqueeze(0).to(device)
